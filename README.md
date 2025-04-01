@@ -1,36 +1,40 @@
-# SUT COURSE API (.NET 9 version) 📚📒
+# **SUT Course API (Built with .NET 9)** 📚
 
-This project scrapes course data from Suranaree University of Technology's registration system.
+Welcome to the **SUT Course API**, a project designed to scrape course data from the Suranaree University of Technology (SUT) registration system. With this API, you can access detailed course information in real-time!
 
-## Getting Started 🚀
+---
 
-Clone this repository:
+## **Quick Start** 🚀
 
-```zsh
+### **1. Clone the Repo**
+Get started by cloning this repository to your local machine:
+
+```
 git clone https://github.com/Taweechaikxmm/sut-course-api-dotnet.git
-
 cd sut-course-api-dotnet
 ```
 
-### Start the Project
+### **2. Run the Project**
+To run the project, just use the following command:
 
-```zsh
+```
 dotnet run
 ```
 
-### Start with Docker (Optional)
+### **3. Running with Docker (Optional)**
+For Docker lovers, you can build and run the project in a container:
 
-Build and run with Docker:
-
-```sh
+```
 docker build -t sut-course-api-dotnet .
 docker run -p 8080:8080 sut-course-api-dotnet
 ```
+
+---
 ## API Reference
 
 #### Get Courses
 
-```http
+```
   POST /api/courses
 ```
 
@@ -78,8 +82,6 @@ docker run -p 8080:8080 sut-course-api-dotnet
 | `timeFrom (optional)` | `string` | Starting time for filtering courses. The value represents 5-minute intervals, where "1" = 00:00, "2" = 00:05, ..., "288" = 23:55. | "97" (08:00)      |
 | `timeTo (optional)`   | `string` | Ending time for filtering courses. The value follows the same 5-minute interval format.                                           | "144" (12:00)     |
 
-
-> **Warning:** If `courseCode` and `courseName` are not specified, scraping all data may take a long time.
 
 ### Example Requests
 
