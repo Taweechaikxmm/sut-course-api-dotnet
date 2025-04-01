@@ -15,7 +15,6 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
         }
          public async Task<List<ClassInfoResponse>> GetCourses(ClassInfoRequest data)
         {
-            // สร้าง formData จากข้อมูลที่ส่งมา
             var formData = new Dictionary<string, string>
             {
                 { "coursestatus", data.coursestatus },
@@ -46,23 +45,19 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
                 formData.Add("timeto", data.timeto);
             }
 
-            // เรียกใช้ Scraper เพื่อดึงข้อมูล
             var scrapedData = await _scrapersService.ScrapeCourseDataFromPostAsync("http://reg.sut.ac.th/registrar/class_info_1.asp", formData);
 
             try
             {
                 var courses = JsonConvert.DeserializeObject<List<ClassInfoResponse>>(scrapedData);
-                // ส่งข้อมูลกลับ
                 return courses != null && courses.Count > 0 ? courses : new List<ClassInfoResponse>();
             }
             catch (JsonReaderException ex)
             {
-                // ทำการจัดการข้อผิดพลาดที่เกิดจากการอ่านข้อมูล JSON
                 Console.WriteLine($"JSON Parsing Error: {ex.Message}");
             }
             catch (Exception ex)
             {
-                // จัดการข้อผิดพลาดที่เกิดจากปัญหาอื่นๆ
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
 
