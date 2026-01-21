@@ -3,6 +3,12 @@
 Welcome to the **SUT Course API**, a project designed to scrape course data from the Suranaree University of Technology (SUT) registration system. With this API, you can access detailed course information in real-time!
 
 ---
+## **Demo** 🚀
+
+![IMG_5160](https://github.com/user-attachments/assets/ae59d516-4197-4ada-8fc9-2d2499a48c54)
+
+
+---
 
 ## **Quick Start** 🚀
 
