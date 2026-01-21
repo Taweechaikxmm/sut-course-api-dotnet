@@ -11,6 +11,33 @@ namespace Sut_API.Feafure.SutCourse.Endpoints
         public override void Configure()
         {
             Post("/api/courses");
+            Summary(s =>
+            {
+                s.Summary = "ค้นหารายวิชา (SUT Course)";
+                s.Description =
+                    "ดึงข้อมูลรายวิชาจากระบบทะเบียน มหาวิทยาลัยเทคโนโลยีสุรนารี (SUT) " +
+                    "โดยทำการ scrape ข้อมูลผ่านระบบ reg.sut.ac.th";
+
+                s.ExampleRequest = new ClassInfoRequest
+                {
+                    facultyid = "all",
+                    maxrow = "50",
+                    acadyear = "2567",
+                    semester = "3",
+                    CAMPUSID = "",
+                    LEVELID = "1",
+                    coursecode = "103122",
+                    coursename = "*",
+                    cmd = "1",
+                    weekdays = "2",
+                    timefrom = "1",
+                    timeto = "288"
+                };
+
+                s.Responses[200] = "ค้นหารายวิชาสำเร็จ";
+                s.Responses[400] = "รูปแบบข้อมูลไม่ถูกต้อง";
+                s.Responses[500] = "ไม่สามารถเชื่อมต่อระบบทะเบียนได้";
+            });
             AllowAnonymous();
         }
 

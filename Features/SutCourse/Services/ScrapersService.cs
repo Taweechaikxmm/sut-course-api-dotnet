@@ -2,115 +2,134 @@ namespace Sut_API.Feafure.SutCourse.Services
 {
     using HtmlAgilityPack;
     using Newtonsoft.Json;
-    using System;
-    using System.Collections.Generic;
-    using System.Net.Http;
+    using System.Net;
     using System.Text;
-    using System.Threading.Tasks;
     using System.Web;
 
     public class ScrapersService
     {
-        private static readonly HttpClient client = new HttpClient();
-        public  async Task<string> ScrapeCourseDataFromPostAsync(string url, Dictionary<string, string> formData)
+        public async Task<string> ScrapeCourseDataFromPostAsync(
+            string url,
+            Dictionary<string, string> formData)
         {
-            try
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var cookies = new CookieContainer();
+
+            var handler = new HttpClientHandler
             {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var courses = new List<object>(); // List to store all courses data
-                while (url != "")
+                UseCookies = true,
+                CookieContainer = cookies,
+                AutomaticDecompression =
+                    DecompressionMethods.GZip |
+                    DecompressionMethods.Deflate |
+                    DecompressionMethods.Brotli
+            };
+
+            using var client = new HttpClient(handler);
+
+            // ✅ Browser headers
+            client.DefaultRequestHeaders.Add("User-Agent",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
+                "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                "Chrome/141.0.0.0 Safari/537.36");
+
+            client.DefaultRequestHeaders.Add("Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+
+            client.DefaultRequestHeaders.Add("Accept-Language", "th-TH,th;q=0.9,en-US;q=0.8");
+            await client.GetAsync(
+                "https://reg.sut.ac.th/registrar/class_info.asp"
+            );
+
+            var courses = new List<object>();
+
+            while (!string.IsNullOrEmpty(url))
+            {
+                client.DefaultRequestHeaders.Referrer =
+                    new Uri("https://reg.sut.ac.th/registrar/class_info.asp");
+
+                client.DefaultRequestHeaders.Add("Origin", "https://reg.sut.ac.th");
+
+                var content = new FormUrlEncodedContent(formData);
+
+                var response = await client.PostAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    // Send POST request with form data
-                    var content = new FormUrlEncodedContent(formData);
-                    var response = await client.PostAsync(url, content);
-
-                    if (!response.IsSuccessStatusCode)
+                    return JsonConvert.SerializeObject(new
                     {
-                        return JsonConvert.SerializeObject(new { Error = $"Error: {response.StatusCode}" });
-                    }
+                        Error = response.StatusCode.ToString()
+                    });
+                }
 
-                    // Get response as byte array and convert it to TIS-620 encoding
-                    byte[] responseBytes = await response.Content.ReadAsByteArrayAsync();
-                    string contentTIS620 = Encoding.GetEncoding("TIS-620").GetString(responseBytes);
+                byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                string html = Encoding.GetEncoding("TIS-620").GetString(bytes);
 
-                    // Load the HTML content using HtmlAgilityPack
-                    var document = new HtmlDocument();
-                    document.LoadHtml(contentTIS620);
+                var doc = new HtmlDocument();
+                doc.LoadHtml(html);
 
-                    // Process table rows and add courses to the list
-                    var rows = document.DocumentNode.SelectNodes("//table//tr");
+                var rows = doc.DocumentNode.SelectNodes("//table//tr");
+
+                if (rows != null)
+                {
                     foreach (var row in rows)
                     {
                         var cells = row.SelectNodes("td");
-                        if (cells != null && cells.Count >= 12)
+                        if (cells == null || cells.Count < 11)
+                            continue;
+
+                        var courseName =
+                            HttpUtility.HtmlDecode(
+                                cells[2].SelectSingleNode("font")?.InnerText?.Trim()
+                            );
+
+                        var professors = new List<string>();
+                        var profNodes = cells[2].SelectNodes(".//li");
+
+                        if (profNodes != null)
                         {
-                            var courseName = HttpUtility.HtmlDecode(cells[2].SelectSingleNode("font").InnerText.Trim()); // Extract course name from <font>
-
-                            // Extract professors from <li> tags under <font>
-                            var professors = new List<string>();
-                            var professorNodes = cells[2].SelectNodes(".//li");
-                            if (professorNodes != null)
-                            {
-                                foreach (var professor in professorNodes)
-                                {
-                                    professors.Add(HttpUtility.HtmlDecode(professor.InnerText.Trim()));
-                                }
-                            }
-                            var course = new
-                            {
-                                CourseCodeVersion = HttpUtility.HtmlDecode(cells[1].InnerText.Trim()),
-                                CourseName = courseName,
-                                Professors = professors,
-                                Credit = HttpUtility.HtmlDecode(cells[3].InnerText.Trim()),
-                                Language = HttpUtility.HtmlDecode(cells[4].InnerText.Trim()),
-                                Degree = HttpUtility.HtmlDecode(cells[5].InnerText.Trim()),
-                                Schedule = HttpUtility.HtmlDecode(cells[6].InnerText.Trim()),
-                                TotalSeats = HttpUtility.HtmlDecode(cells[7].InnerText.Trim()),
-                                Registered = HttpUtility.HtmlDecode(cells[8].InnerText.Trim()),
-                                RemainingSeats = HttpUtility.HtmlDecode(cells[9].InnerText.Trim()),
-                                Status = HttpUtility.HtmlDecode(cells[10].InnerText.Trim())
-                            };
-
-                            courses.Add(course);
+                            foreach (var p in profNodes)
+                                professors.Add(HttpUtility.HtmlDecode(p.InnerText.Trim()));
                         }
-                    }
-                    // Find the "Next" button or link
-                    var nextButton = document.DocumentNode.SelectSingleNode("//a[contains(text(),'หน้าต่อไป')]");
 
-                    if (nextButton != null)
-                    {
-                        // Get the URL for the next page from the 'href' attribute
-                        var nextUrl = nextButton.GetAttributeValue("href", "");
-
-                        if (nextUrl != "")
+                        courses.Add(new
                         {
-                            // Append the base URL to the next page URL
-                            url = "http://reg.sut.ac.th/registrar/" + nextUrl;
-
-                            // Continue scraping the next page
-                            Console.WriteLine("Moving to next page...");
-                        }
-                        else
-                        {
-                            url = ""; // No more pages to load
-                        }
-                    }
-                    else
-                    {
-                        url = ""; // No "Next" button, so stop
+                            CourseCodeVersion = HttpUtility.HtmlDecode(cells[1].InnerText.Trim()),
+                            CourseName = courseName,
+                            Professors = professors,
+                            Credit = cells[3].InnerText.Trim(),
+                            Language = cells[4].InnerText.Trim(),
+                            Degree = cells[5].InnerText.Trim(),
+                            Schedule = cells[6].InnerText.Trim(),
+                            TotalSeats = cells[7].InnerText.Trim(),
+                            Registered = cells[8].InnerText.Trim(),
+                            RemainingSeats = cells[9].InnerText.Trim(),
+                            Status = cells[10].InnerText.Trim()
+                        });
                     }
                 }
 
-                // Display the courses data in Console as formatted JSON
-                Console.WriteLine(JsonConvert.SerializeObject(courses, Formatting.Indented));
+                // ----------------------------
+                // pagination
+                // ----------------------------
+                var next = doc.DocumentNode
+                    .SelectSingleNode("//a[contains(text(),'หน้าต่อไป')]");
 
-                // Return the courses data as JSON
-                return JsonConvert.SerializeObject(courses);
+                if (next != null)
+                {
+                    var href = next.GetAttributeValue("href", "");
+                    url = string.IsNullOrEmpty(href)
+                        ? ""
+                        : "https://reg.sut.ac.th/registrar/" + href;
+                }
+                else
+                {
+                    url = "";
+                }
             }
-            catch (Exception ex)
-            {
-                return JsonConvert.SerializeObject(new { Error = $"Error occurred: {ex.Message}" });
-            }
+
+            return JsonConvert.SerializeObject(courses, Formatting.Indented);
         }
     }
 }

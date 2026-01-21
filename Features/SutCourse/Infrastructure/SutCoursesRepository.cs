@@ -63,7 +63,7 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
 
 
 
-            // ส่งข้อมูลกลับ
+            // send data back
             return new List<ClassInfoResponse>();
         }
     }
