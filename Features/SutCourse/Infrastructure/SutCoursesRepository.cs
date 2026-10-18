@@ -66,5 +66,20 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
             // send data back
             return new List<ClassInfoResponse>();
         }
+
+        public async Task<ExamInfoResponse> GetExamInfo(ExamInfoRequest data)
+        {
+            var exams = await _scrapersService.ScrapeExamFromDetailPageAsync(
+                data.courseid,
+                data.acadyear,
+                data.semester
+            );
+
+            return new ExamInfoResponse
+            {
+                Midterm = exams.TryGetValue("midterm", out var mid) ? mid : "",
+                Final = exams.TryGetValue("final", out var fin) ? fin : ""
+            };
+        }
     }
 }

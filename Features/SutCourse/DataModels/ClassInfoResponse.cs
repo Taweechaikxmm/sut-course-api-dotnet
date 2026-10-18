@@ -2,6 +2,7 @@ namespace Sut_API.Feafure.SutCourse.DataModels
 {
     public class ClassInfoResponse
     {
+        public string? CourseId { get; set; }
         public string? CourseCodeVersion { get; set; }
         public string? CourseName { get; set; }
         public List<string?>? Professors { get; set; }
