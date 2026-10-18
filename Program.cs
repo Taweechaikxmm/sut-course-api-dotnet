@@ -28,4 +28,7 @@ var app = builder.Build();
 app.MapFastEndpoints();
 app.UseSwaggerGen();
 
+// Health check endpoint — ใช้ ping เพื่อป้องกัน Render free tier หลับ
+app.MapGet("/health", () => Results.Ok(new { status = "ok", ts = DateTime.UtcNow }));
+
 app.Run();
