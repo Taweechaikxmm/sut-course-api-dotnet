@@ -16,6 +16,8 @@ namespace Sut_API.Feafure.SutCourse.DataModels
         public string? coursename { get; set; }
         public string? cmd { get; set; }
 
+        /// <summary>URL หน้าถัดไปที่ server เคยส่งกลับมาใน field Next (pagination) — ถ้ามีจะ GET แทน POST ค้นใหม่</summary>
+        public string? nextUrl { get; set; }
 
 
     }

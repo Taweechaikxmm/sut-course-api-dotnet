@@ -6,7 +6,7 @@ using Sut_API.Feafure.SutCourse.Infrastructure;
 // API Endpoint
 namespace Sut_API.Feafure.SutCourse.Endpoints
 {
-    public class GetCoursesEndpoint : Endpoint<ClassInfoRequest, List<ClassInfoResponse>>
+    public class GetCoursesEndpoint : Endpoint<ClassInfoRequest, CoursesPageResponse>
     {
         public override void Configure()
         {
@@ -58,6 +58,7 @@ namespace Sut_API.Feafure.SutCourse.Endpoints
                 coursecode = req.coursecode,
                 coursename = req.coursename,
                 cmd = req.cmd,
+                nextUrl = req.nextUrl,
             }.ExecuteAsync();
             await SendAsync(courses);
         }

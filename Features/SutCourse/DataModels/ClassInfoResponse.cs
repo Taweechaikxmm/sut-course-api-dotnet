@@ -10,6 +10,7 @@ namespace Sut_API.Feafure.SutCourse.DataModels
         public string? Language { get; set; }
         public string? Degree { get; set; }
         public string? Schedule { get; set; }
+        public string? Group { get; set; }
         public string? TotalSeats { get; set; }
         public string? Registered { get; set; }
         public string? RemainingSeats { get; set; }

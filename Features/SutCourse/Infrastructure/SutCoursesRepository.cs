@@ -13,7 +13,7 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
         {
             this._scrapersService = _scrapersService;
         }
-         public async Task<List<ClassInfoResponse>> GetCourses(ClassInfoRequest data)
+         public async Task<CoursesPageResponse> GetCourses(ClassInfoRequest data)
         {
             var formData = new Dictionary<string, string>
             {
@@ -45,12 +45,21 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
                 formData.Add("timeto", data.timeto);
             }
 
-            var scrapedData = await _scrapersService.ScrapeCourseDataFromPostAsync("http://reg.sut.ac.th/registrar/class_info_1.asp", formData);
+            var scrapedData = await _scrapersService.ScrapeCoursePageAsync(
+                "http://reg.sut.ac.th/registrar/class_info_1.asp",
+                formData,
+                data.nextUrl ?? ""
+            );
 
             try
             {
-                var courses = JsonConvert.DeserializeObject<List<ClassInfoResponse>>(scrapedData);
-                return courses != null && courses.Count > 0 ? courses : new List<ClassInfoResponse>();
+                var page = JsonConvert.DeserializeObject<CoursesPageResponse>(scrapedData);
+                if (page != null)
+                    return new CoursesPageResponse
+                    {
+                        Items = page.Items ?? new List<ClassInfoResponse>(),
+                        Next = string.IsNullOrWhiteSpace(page.Next) ? null : page.Next
+                    };
             }
             catch (JsonReaderException ex)
             {
@@ -64,7 +73,7 @@ namespace Sut_API.Feafure.SutCourse.Infrastructure
 
 
             // send data back
-            return new List<ClassInfoResponse>();
+            return new CoursesPageResponse();
         }
 
         public async Task<ExamInfoResponse> GetExamInfo(ExamInfoRequest data)

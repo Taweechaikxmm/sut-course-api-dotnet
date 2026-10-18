@@ -4,18 +4,18 @@ using Sut_API.Feafure.SutCourse.Infrastructure;
 
 namespace Sut_API.Feafure.SutCourse.Commands
 {
-    public class GetCourses : ClassInfoRequest, ICommand<List<ClassInfoResponse>>
+    public class GetCourses : ClassInfoRequest, ICommand<CoursesPageResponse>
     {
     }
 
-    public class GetCoursesHandler : ICommandHandler<GetCourses, List<ClassInfoResponse>>
+    public class GetCoursesHandler : ICommandHandler<GetCourses, CoursesPageResponse>
     {
         private readonly ISutCoursesRepository _sutCoursesRepository;
-        public GetCoursesHandler(ISutCoursesRepository _sutCoursesRepository)
+        public GetCoursesHandler(ISutCoursesRepository sutCoursesRepository)
         {
-            this._sutCoursesRepository = _sutCoursesRepository;
+            this._sutCoursesRepository = sutCoursesRepository;
         }
-        public async Task<List<ClassInfoResponse>> ExecuteAsync(GetCourses request, CancellationToken cancellationToken)
+        public async Task<CoursesPageResponse> ExecuteAsync(GetCourses request, CancellationToken cancellationToken)
         {
             var response = await _sutCoursesRepository.GetCourses(request);
             return response;
