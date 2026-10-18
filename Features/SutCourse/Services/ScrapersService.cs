@@ -116,10 +116,20 @@ namespace Sut_API.Feafure.SutCourse.Services
                     if (cells.Count < 11 + groupOffset)
                         continue;
 
-                    var courseName =
-                        HttpUtility.HtmlDecode(
-                            cells[2].SelectSingleNode("font")?.InnerText?.Trim()
-                        );
+                    // ชื่อหลัก (font แรก เช่น "ART APPRECIATION")
+                    var mainFont = cells[2].SelectSingleNode("font");
+                    var mainName = HttpUtility.HtmlDecode(mainFont?.InnerText?.Trim());
+
+                    // subtitle (font size=1 color=#660000 เช่น "( กลุ่มศึกษาทั่วไปแบบเลือก... )")
+                    var subtitleNode = cells[2].SelectSingleNode(".//font[@size='1' and @color='#660000']");
+                    var subtitle = subtitleNode != null
+                        ? HttpUtility.HtmlDecode(subtitleNode.InnerText?.Trim())
+                        : null;
+
+                    // รวม subtitle เข้าชื่อ เพื่อให้ client-side filter ค้น keyword กลางชื่อได้
+                    var courseName = !string.IsNullOrWhiteSpace(subtitle)
+                        ? $"{mainName} | {subtitle}"
+                        : mainName;
 
                     var professors = new List<string>();
                     var profNodes = cells[2].SelectNodes(".//li");
