@@ -1,0 +1,24 @@
+name: Keep Alive
+
+on:
+  schedule:
+    # ทุก 10 นาที กัน Render free tier หลับ
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API
+        run: |
+          # ping swagger (เบากว่า POST /api/courses ที่ต้อง scrape ทะเบียน)
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -m 60 \
+              "https://sut-course-api-dotnet.onrender.com/swagger/v1/swagger.json" || echo 000)
+            echo "attempt $i -> $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 30
+          done
+          echo "API ไม่ตอบสนอง — อาจหลับหรือมีปัญหา"
+          exit 1
